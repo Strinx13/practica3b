@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pokédex</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1 class="pOKE">Pokédex</h1>
+        </div>
+        <div class="search-bar">
+            <input type="text" id="pokemon-name" placeholder="Nombre o número">
+            <button onclick="getPokemonData()">Buscar</button>
+        </div>
+        <div id="pokemon-container" class="pokemon-container"></div>
+    </div>
+
+    <script>
+        async function getAllPokemon() {
+            const url = 'https://pokeapi.co/api/v2/pokemon?limit=1000'; // Puedes ajustar el límite según tus necesidades
+
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+                const pokemonList = data.results;
+
+                for (const pokemon of pokemonList) {
+                    const pokemonData = await fetch(pokemon.url).then(res => res.json());
+                    displayPokemonData(pokemonData);
+                }
+            } catch (error) {
+                console.error('Error al obtener la lista de Pokémon:', error);
+            }
+        }
+
+        async function getPokemonData() {
+            const pokemonName = document.getElementById('pokemon-name').value.toLowerCase();
+            const url = `https://pokeapi.co/api/v2/pokemon/${pokemonName}`;
+
+            try {
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error(`Pokémon no encontrado: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                document.getElementById('pokemon-container').innerHTML = ''; // Limpiar el contenedor
+                displayPokemonData(data);
+            } catch (error) {
+                document.getElementById('pokemon-container').innerHTML = `<p>Error: ${error.message}</p>`;
+            }
+        }
+
+        function displayPokemonData(data) {
+            const container = document.getElementById('pokemon-container');
+            const pokemonCard = document.createElement('div');
+            pokemonCard.classList.add('pokemon-card');
+            pokemonCard.innerHTML = `
+                <h2>${data.name}</h2>
+                <img src="${data.sprites.front_default}" alt="${data.name}">
+                <p><strong>ID:</strong> ${data.id}</p>
+                <p><strong>Altura:</strong> ${data.height / 10} m</p>
+                <p><strong>Peso:</strong> ${data.weight / 10} kg</p>
+                <h3>Habilidades</h3>
+                <ul>
+                    ${data.abilities.map(ability => `<li>${ability.ability.name}</li>`).join('')}
+                </ul>
+            `;
+            container.appendChild(pokemonCard);
+        }
+
+        // Cargar todos los Pokémon al iniciar la página
+        getAllPokemon();
+    </script>
+</body>
+</html>
